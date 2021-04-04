@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 ﻿public class RubyController : MonoBehaviour
 {
@@ -31,6 +32,17 @@ using UnityEngine.UI;
 	AudioSource audioSource;
 	
 	public AudioClip tossClip;
+	
+	private static int score = 0;
+	public Text winText;
+	public Text fixText;
+	public Text ammoText;
+	
+	public int ammo = 4;
+	
+	public MusicController musicController;
+	
+	//private FixText fixText;
     
     // Start is called before the first frame update
     void Start()
@@ -41,25 +53,38 @@ using UnityEngine.UI;
         currentHealth = maxHealth;
 		
 		audioSource= GetComponent<AudioSource>();
+		
+		fixText.text = "Score: " + score;
+		ammoText.text = "Ammo: " + ammo;
+		
+		//GameObject fixTextObject = GameObject.FindWithTag("FixTag");
+		//if (fixText != null)
+		//{
+		//	fixText = fixTextObject.GetComponent<FixText>();
+		//	fixText.text = "Score: " + score;
+		//}
     }
 
     // Update is called once per frame
     void Update()
     {
-        horizontal = Input.GetAxis("Horizontal");
-        vertical = Input.GetAxis("Vertical");
+		if (currentHealth > 0)
+		{
+			horizontal = Input.GetAxis("Horizontal");
+			vertical = Input.GetAxis("Vertical");
         
-        Vector2 move = new Vector2(horizontal, vertical);
+			Vector2 move = new Vector2(horizontal, vertical);
         
-        if(!Mathf.Approximately(move.x, 0.0f) || !Mathf.Approximately(move.y, 0.0f))
-        {
-            lookDirection.Set(move.x, move.y);
-            lookDirection.Normalize();
-        }
+			if(!Mathf.Approximately(move.x, 0.0f) || !Mathf.Approximately(move.y, 0.0f))
+			{
+				lookDirection.Set(move.x, move.y);
+				lookDirection.Normalize();
+			}
         
-        animator.SetFloat("Look X", lookDirection.x);
-        animator.SetFloat("Look Y", lookDirection.y);
-        animator.SetFloat("Speed", move.magnitude);
+			animator.SetFloat("Look X", lookDirection.x);
+			animator.SetFloat("Look Y", lookDirection.y);
+			animator.SetFloat("Speed", move.magnitude);
+		}
         
         if (isInvincible)
         {
@@ -70,8 +95,13 @@ using UnityEngine.UI;
         
         if(Input.GetKeyDown(KeyCode.C))
         {
-            Launch();
-			PlaySound(tossClip);
+			if (ammo > 0)
+			{
+				Launch();
+				PlaySound(tossClip);
+				ammo -= 1;
+				ammoText.text = "Ammo: " + ammo;
+			}
         }
 		
 		if (Input.GetKeyDown(KeyCode.X))
@@ -84,7 +114,16 @@ using UnityEngine.UI;
 					NonPlayerCharacter character = hit.collider.GetComponent<NonPlayerCharacter>();
 					if (character != null)
 					{
-						character.DisplayDialog();
+						if (score < 4)
+						{
+							character.DisplayDialog();
+						}
+						
+						if (score >= 4)
+						{
+							SceneManager.LoadScene("Level2");
+							winText.text = "";
+						}
 					}  
 				}
 			}
@@ -94,31 +133,63 @@ using UnityEngine.UI;
 		{
 			Application.Quit();
 		}
+		
+		if (Input.GetKeyDown(KeyCode.R))
+		{
+			if (score >= 8)
+			{
+				SceneManager.LoadScene("Main");
+				score -= 8;
+			}
+			if (currentHealth <= 0)
+			{
+				Restart();
+			}
+		}
     }
     
     void FixedUpdate()
     {
-        Vector2 position = rigidbody2d.position;
-        position.x = position.x + speed * horizontal * Time.deltaTime;
-        position.y = position.y + speed * vertical * Time.deltaTime;
+		if (currentHealth > 0)
+		{
+			Vector2 position = rigidbody2d.position;
+			position.x = position.x + speed * horizontal * Time.deltaTime;
+			position.y = position.y + speed * vertical * Time.deltaTime;
 
-        rigidbody2d.MovePosition(position);
+			rigidbody2d.MovePosition(position);
+		}
     }
 
     public void ChangeHealth(int amount)
     {
-        if (amount < 0)
-        {
-            if (isInvincible)
-                return;
+		if (currentHealth > 0)
+		{	
+			if (amount < 0)
+			{
+				if (isInvincible)
+					return;
             
-            isInvincible = true;
-            invincibleTimer = timeInvincible;
-        }
+				isInvincible = true;
+				invincibleTimer = timeInvincible;
+			}
         
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-        UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
+			currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+			UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
+		
+			if (currentHealth == 0)
+			{
+				winText.text = "You lose! Game developed by Russell Goodrich. Press R to restart.";
+				print ("Test here!");
+				MusicSound();
+			}
+		}
     }
+	
+	public void ChangeAmmo()
+	{
+		ammo += 4;
+		ammoText.text = "Ammo: " + ammo;
+	}
     
     void Launch()
     {
@@ -133,5 +204,48 @@ using UnityEngine.UI;
 	public void PlaySound(AudioClip clip)
 	{
 		audioSource.PlayOneShot(clip);
+	}
+	
+	public void ChangeFix()
+	{
+		score += 1;
+		print ("Score changed!");
+		fixText.text = "Score: " + score;
+		if (score == 4)
+		{
+			winText.text = "Talk to Jambi to visit stage two!";
+		}
+		
+		if (score >= 8)
+		{
+			winText.text = "You win! Game developed by Russell Goodrich. Press R to restart.";
+			MusicSound();
+		}
+	}
+	
+	public void Restart()
+	{
+		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+	}
+	
+	public void MusicSound()
+	{
+		GameObject musicObject = GameObject.FindWithTag("MusicTag");
+		if (musicObject != null)
+		{
+			musicController = musicObject.GetComponent<MusicController>();
+			if (musicController != null)
+			{
+				if (score >= 8)
+				{
+					musicController.winCommand();
+				}
+				
+				if (currentHealth == 0)
+				{
+					musicController.loseCommand();
+				}
+			}
+		}
 	}
 }

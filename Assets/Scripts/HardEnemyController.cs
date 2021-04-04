@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-﻿public class EnemyController : MonoBehaviour
+﻿public class HardEnemyController : MonoBehaviour
 {
     public float speed;
     public bool vertical;
@@ -78,7 +78,7 @@ using UnityEngine;
 
         if (player != null)
         {
-            player.ChangeHealth(-1);
+            player.ChangeHealth(-2);
 			player.hitEffect.Play();
 			player.PlaySound(hitClip);
         }
