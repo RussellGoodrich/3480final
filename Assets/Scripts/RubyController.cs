@@ -32,6 +32,7 @@ using UnityEngine.SceneManagement;
 	AudioSource audioSource;
 	
 	public AudioClip tossClip;
+	public AudioClip popClip;
 	
 	private static int score = 0;
 	public Text winText;
@@ -41,6 +42,11 @@ using UnityEngine.SceneManagement;
 	public int ammo = 4;
 	
 	public MusicController musicController;
+	
+	public bool InvincibleSet;
+	public bool Splashed;
+	
+	SpriteRenderer spriteColor;
 	
 	//private FixText fixText;
     
@@ -52,10 +58,17 @@ using UnityEngine.SceneManagement;
         
         currentHealth = maxHealth;
 		
-		audioSource= GetComponent<AudioSource>();
+		audioSource = GetComponent<AudioSource>();
 		
 		fixText.text = "Score: " + score;
 		ammoText.text = "Ammo: " + ammo;
+		
+		InvincibleSet  = false;
+		Splashed = false;
+		
+		spriteColor = GetComponent<SpriteRenderer>();
+		
+		//StartCoroutine(InvinTime());
 		
 		//GameObject fixTextObject = GameObject.FindWithTag("FixTag");
 		//if (fixText != null)
@@ -155,7 +168,7 @@ using UnityEngine.SceneManagement;
 			Vector2 position = rigidbody2d.position;
 			position.x = position.x + speed * horizontal * Time.deltaTime;
 			position.y = position.y + speed * vertical * Time.deltaTime;
-
+	
 			rigidbody2d.MovePosition(position);
 		}
     }
@@ -164,26 +177,78 @@ using UnityEngine.SceneManagement;
     {
 		if (currentHealth > 0)
 		{	
-			if (amount < 0)
+			if (InvincibleSet == false)
 			{
-				if (isInvincible)
-					return;
-            
-				isInvincible = true;
-				invincibleTimer = timeInvincible;
-			}
-        
-			currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-			UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
-		
-			if (currentHealth == 0)
-			{
-				winText.text = "You lose! Game developed by Russell Goodrich. Press R to restart.";
-				print ("Test here!");
-				MusicSound();
+				if (amount < 0)
+				{
+					if (isInvincible)
+						return;
+			
+					isInvincible = true;
+					invincibleTimer = timeInvincible;
+				}
+			
+				currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+				UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
+			
+				if (currentHealth == 0)
+				{
+					winText.text = "You lose! Game developed by Russell Goodrich. Press R to restart.";
+					print ("Test here!");
+					MusicSound();
+				}
 			}
 		}
     }
+	
+	public void InvincibilityStart()
+	{
+		print ("Reached Invin2");
+		InvincibleSet = true;
+		spriteColor.color = new Color (0,0,1,1);
+		PlaySound(popClip);
+		print ("You are invincible!");
+		StartCoroutine(InvinTime());
+		InvinTime();
+	}
+	
+	IEnumerator InvinTime()
+	{
+		print ("Reached Invin1");
+		yield return new WaitForSeconds(5);
+		InvincibilityEnd();
+	}
+	
+	public void InvincibilityEnd()
+	{
+		print ("Reached Invin3");
+		InvincibleSet = false;
+		spriteColor.color = new Color (1,1,1,1);
+		PlaySound(popClip);
+		print ("Invincibility Ended!");
+	}
+	
+	public void OilSplash()
+	{
+		Splashed = true;
+		spriteColor.color = new Color (0,0,0,1);
+		speed = 1.5f;
+		StartCoroutine(OilTime());
+		OilTime();
+	}
+	
+	IEnumerator OilTime()
+	{
+		yield return new WaitForSeconds(2);
+		SplashEnd();
+	}
+	
+	public void SplashEnd()
+	{
+		speed = 3.0f;
+		spriteColor.color = new Color (1,1,1,1);
+		Splashed = false;
+	}
 	
 	public void ChangeAmmo()
 	{
@@ -195,10 +260,21 @@ using UnityEngine.SceneManagement;
     {
         GameObject projectileObject = Instantiate(projectilePrefab, rigidbody2d.position + Vector2.up * 0.5f, Quaternion.identity);
 
-        Projectile projectile = projectileObject.GetComponent<Projectile>();
-        projectile.Launch(lookDirection, 300);
-
-        animator.SetTrigger("Launch");
+        if (Splashed == true)
+		{
+			Projectile projectile = projectileObject.GetComponent<Projectile>();
+			projectile.Launch(lookDirection, 150);
+			projectile.OilSplash();
+			
+			animator.SetTrigger("Launch");
+		}
+		else
+		{
+			Projectile projectile = projectileObject.GetComponent<Projectile>();
+			projectile.Launch(lookDirection, 300);
+			
+			animator.SetTrigger("Launch");
+		}
     }
 	
 	public void PlaySound(AudioClip clip)

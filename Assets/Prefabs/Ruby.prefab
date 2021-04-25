@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 209435673}
   m_Layer: 8
   m_Name: Ruby
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -109,8 +109,13 @@ MonoBehaviour:
   hitEffect: {fileID: 4797003229317745036}
   fruitEffect: {fileID: 8494089205486088127}
   tossClip: {fileID: 8300000, guid: b2edfd40873655249ba0e01a5cf705be, type: 3}
-  winScore: 3
+  popClip: {fileID: 8300000, guid: d0668138e82a4bc42919bb1c09500367, type: 3}
   winText: {fileID: 0}
+  fixText: {fileID: 0}
+  ammoText: {fileID: 0}
+  ammo: 4
+  musicController: {fileID: 0}
+  InvincibleSet: 0
 --- !u!50 &3690673935970963883
 Rigidbody2D:
   serializedVersion: 4

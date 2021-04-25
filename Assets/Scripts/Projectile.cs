@@ -6,16 +6,27 @@ using UnityEngine.UI;
 public class Projectile : MonoBehaviour
 {
     Rigidbody2D rigidbody2d;
+	
+	SpriteRenderer spriteColor;
+	
+	public float speed;
     
     void Awake()
     {
         rigidbody2d = GetComponent<Rigidbody2D>();
+		spriteColor = GetComponent<SpriteRenderer>();
     }
     
     public void Launch(Vector2 direction, float force)
     {
-        rigidbody2d.AddForce(direction * force);
+		speed = force;
+        rigidbody2d.AddForce(direction * speed);
     }
+	
+	public void OilSplash()
+	{
+		spriteColor.color = new Color (0,0,0,1);
+	}
     
     void Update()
     {

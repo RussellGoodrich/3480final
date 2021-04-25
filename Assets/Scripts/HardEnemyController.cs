@@ -78,9 +78,12 @@ using UnityEngine;
 
         if (player != null)
         {
-            player.ChangeHealth(-2);
-			player.hitEffect.Play();
-			player.PlaySound(hitClip);
+			if (player.InvincibleSet == false)
+			{
+				player.ChangeHealth(-2);
+				player.hitEffect.Play();
+				player.PlaySound(hitClip);
+			}
         }
     }
     

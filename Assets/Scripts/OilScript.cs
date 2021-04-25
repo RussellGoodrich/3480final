@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpikeController : MonoBehaviour
+public class OilScript : MonoBehaviour
 {
-	public AudioClip hitClip;
+	public AudioClip splashClip;
 	
     void OnTriggerStay2D(Collider2D other)
     {
@@ -14,8 +14,7 @@ public class SpikeController : MonoBehaviour
         {
 			if (controller.InvincibleSet == false)
 			{
-				controller.hitEffect.Play();
-				controller.ChangeHealth(-1);
+				controller.OilSplash();
 			}
         }
     }
@@ -28,7 +27,7 @@ public class SpikeController : MonoBehaviour
         {
 			if (controller.InvincibleSet == false)
 			{
-				controller.PlaySound(hitClip);
+				controller.PlaySound(splashClip);
 			}
         }
     }
